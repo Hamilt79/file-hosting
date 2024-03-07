@@ -1,6 +1,7 @@
 package main
 
 import (
+    "strings"
     "bytes"
     "io"
     "fmt"
@@ -20,6 +21,10 @@ func exists(path string) bool {
 func downloadFile(w http.ResponseWriter, r *http.Request) {
 
     fmt.Println("Here")
+    if strings.Contains(r.URL.Path[10:], "/") {
+        fmt.Println("There is a / in the path")
+        return
+    }
     dirPath := "./files/" + r.URL.Path[10:]
     fmt.Println(r.URL.Path[10:])
     
@@ -76,6 +81,11 @@ func fileHandler(w http.ResponseWriter, r *http.Request) {
     if err != nil {
         fmt.Println(err)
         return 
+    }
+    
+    if strings.Contains(header.Filename, "/") {
+        fmt.Println("There is a / in the path")
+        return
     }
     os.WriteFile("./files/" + uid + "/" + header.Filename, fileBuffer.Bytes(), 0777)
 
