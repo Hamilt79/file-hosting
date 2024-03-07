@@ -2,10 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Home</title>
+    <title>File Hoster</title>
 </head>
 <body>
-    <p>Test Para</p>
+    <h1>File Hoster</h1>
+    <form action="/post-file" method="post" enctype="multipart/form-data" target="_self">
+        <input type="file" name="file" id="file">
+        <input type="submit" value="Upload" name="submit">
+    </form>
 </body>
-
 </html>
