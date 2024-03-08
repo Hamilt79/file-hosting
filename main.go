@@ -101,5 +101,8 @@ func main() {
     http.Handle("/", fs)
     http.HandleFunc("/post-file", fileHandler)
     http.HandleFunc("/download/*", downloadFile)
+    go func() {
+	    log.Fatal(http.ListenAndServe(":8081", nil))
+    }()
     log.Fatal(http.ListenAndServeTLS(":8080", "../certs/certificate.crt", "../certs/private.key" , nil))
 }
