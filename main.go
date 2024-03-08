@@ -1,6 +1,7 @@
 package main
 
 import (
+    "sync"
     "strings"
     "bytes"
     "io"
@@ -62,47 +63,68 @@ func downloadFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func fileHandler(w http.ResponseWriter, r *http.Request) {
-    fmt.Println(r.Header)
-    fmt.Println(r.Body)
+    // Generating a new unique id for the file dir
     uid := uuid.New().String()
+    // Printing that id to console
     fmt.Println(uid)
+    // Creating the directory for the file
     os.MkdirAll("./files/" + uid, 0777)
-
+    // Parsing the form
     r.ParseForm()
 
+    // Getting the file the user sent from the form
     file, header, err := r.FormFile("file")
     if err != nil {
         fmt.Println(err)
         return
     }
+    defer file.Close()
+    
+    // Printing the file name to the console
     fmt.Println(header.Filename)
+    // Making a buffer to store the file
     fileBuffer := bytes.NewBuffer(nil)
+    // Writing the file to the buffer
     _, err = io.Copy(fileBuffer, file)
     if err != nil {
         fmt.Println(err)
         return 
     }
-    
+
+    // Making sure the filename doesn't contain a / to prevent directory traversal
+    // There are still prolly other ways to do directory traversal but this is a start
     if strings.Contains(header.Filename, "/") {
         fmt.Println("There is a / in the path")
         return
     }
+    // Writing the file to the directory
     os.WriteFile("./files/" + uid + "/" + header.Filename, fileBuffer.Bytes(), 0777)
 
     hostName := r.Host
 
+    // Writing the link the user can use to download the file to the response page
     fmt.Fprintf(w, "<p>%v</p>", hostName + "/download/" + uid)
-
 }
 
 func main() {
-    fmt.Println("Hello, World!")
+    fmt.Println("Server starting up.")
     fs := http.FileServer(http.Dir("./public"))
     http.Handle("/", fs)
     http.HandleFunc("/post-file", fileHandler)
     http.HandleFunc("/download/*", downloadFile)
+
+    var waitG sync.WaitGroup
+
+    waitG.Add(1)
     go func() {
-	    log.Fatal(http.ListenAndServe(":8081", nil))
+        log.Fatal(http.ListenAndServe(":8081", nil))
+        waitG.Done()
     }()
-    log.Fatal(http.ListenAndServeTLS(":8080", "../certs/certificate.crt", "../certs/private.key" , nil))
+    waitG.Add(1)
+    go func() {
+        log.Fatal(http.ListenAndServeTLS(":8080", "../certs/certificate.crt", "../certs/private.key" , nil))
+        waitG.Done()
+    }()
+    fmt.Println("Server started.")
+    waitG.Wait()
 }
