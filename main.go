@@ -101,5 +101,5 @@ func main() {
     http.Handle("/", fs)
     http.HandleFunc("/post-file", fileHandler)
     http.HandleFunc("/download/*", downloadFile)
-    log.Fatal(http.ListenAndServe(":80", nil))
+    log.Fatal(http.ListenAndServe(":8080", nil))
 }
