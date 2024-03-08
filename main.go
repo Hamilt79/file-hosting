@@ -21,23 +21,30 @@ func exists(path string) bool {
 
 func downloadFile(w http.ResponseWriter, r *http.Request) {
 
-    fmt.Println("Here")
+    // Checking if the path contains a / to prevent directory traversal
     if strings.Contains(r.URL.Path[10:], "/") {
         fmt.Println("There is a / in the path")
         return
     }
+    // Building the directory path
     dirPath := "./files/" + r.URL.Path[10:]
     fmt.Println(r.URL.Path[10:])
     
+    // Checking if the directory exists
     dirExists := exists(dirPath)
     if (!dirExists) {
+        fmt.Println("The directory doesn't exist")
         return;
     }
+
+    // Getting all the files in the directory since we don't know the name of the file
     entry, err := os.ReadDir(dirPath)
     if err != nil {
         fmt.Println(err)
         return
     }
+
+    // There should be at least one file in the directory, and there shouldn't more than one file (hopefully)
     if len(entry) != 1 {
         fmt.Println("There is more than one file in the directory")
         return
@@ -48,6 +55,7 @@ func downloadFile(w http.ResponseWriter, r *http.Request) {
     // Set the content disposition to force download
     w.Header().Set("Content-Disposition", "attachment; filename=" + entry[0].Name())
 
+    // Open the file
     file, err := os.OpenFile(dirPath + "/" + entry[0].Name(), os.O_CREATE, 0777)
     if err != nil {
         fmt.Println(err)
@@ -55,6 +63,7 @@ func downloadFile(w http.ResponseWriter, r *http.Request) {
     }
     defer file.Close()
 
+    // Copy the file to the response writer
     _, err = io.Copy(w, file)
     if err != nil {
         fmt.Println(err)
