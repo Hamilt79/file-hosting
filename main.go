@@ -101,5 +101,5 @@ func main() {
     http.Handle("/", fs)
     http.HandleFunc("/post-file", fileHandler)
     http.HandleFunc("/download/*", downloadFile)
-    log.Fatal(http.ListenAndServe(":8080", nil))
+    log.Fatal(http.ListenAndServeTLS(":8080", "../certs/certificate.crt", "../certs/private.key" , nil))
 }
